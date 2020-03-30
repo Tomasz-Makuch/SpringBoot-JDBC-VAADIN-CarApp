@@ -1,0 +1,12 @@
+.logo {
+    padding: 2px;
+    margin-bottom: 35px;
+}
+
+.carNum{
+    color: firebrick;
+    padding: 25px;
+    border-style: double;
+    border-color: firebrick;
+    border-radius: 5px;
+}

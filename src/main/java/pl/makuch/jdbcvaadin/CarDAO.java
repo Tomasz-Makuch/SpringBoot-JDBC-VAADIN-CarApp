@@ -3,12 +3,10 @@ package pl.makuch.jdbcvaadin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 
 @Repository
 public class CarDAO {
@@ -17,11 +15,11 @@ public class CarDAO {
 
     @Autowired
     public CarDAO(JdbcTemplate jdbcTemplate) {
+
         this.jdbcTemplate = jdbcTemplate;
     }
 
     public void saveCar(Car car) {
-        //String sql = "INSERT INTO Cars VALUES(?,?,?,?);";
         String sql = "INSERT INTO cars (mark, model, color) VALUES (?,?,?);";
         jdbcTemplate.update(sql, new Object[]{
                 car.getMark(),
@@ -30,14 +28,14 @@ public class CarDAO {
         });
     }
 
-
     public void updateCar(Car car) {
 
-        System.out.println("wypisuje: "+car.getId());
-        if(car.getId()==0){
+        //if id=0 it's new car
+        if (car.getId() == 0) {
             saveCar(car);
         }
-        else{
+        // if id!=0, car exist id database
+        else {
             String sql1 = "UPDATE cars SET mark = ?, model=?, color=? WHERE id = ?";
 
             jdbcTemplate.update(sql1, new Object[]{
@@ -47,7 +45,6 @@ public class CarDAO {
                     car.getId()
             });
         }
-
     }
 
 
@@ -58,34 +55,39 @@ public class CarDAO {
         });
 
     }
-
-    public List<Map<String, Object>> selectByMark(String mark) {
-        String sql = "select * from cars where mark like ?;";
-        return jdbcTemplate.queryForList(sql, new Object[]{mark});
-    }
-
-    public List<Car> getAllCars() {
+    public List<Car> getFilteredCars() {
         String sql = "select * from cars;";
         return jdbcTemplate.query(sql, new CarMapper());
     }
 
-    public List<Car> getAllCars(String filterType, String filter) {
+    public int getCarsNumByMark(String mark){
+        String sql = "SELECT COUNT(mark) FROM cars where mark = ?;";
+
+        return jdbcTemplate.queryForObject(sql, new Object[] {mark}, Integer.class);
+    }
+
+    public List<Car> getFilteredCars(String filterType, String filter) {
         if (filter == null || filter.isEmpty()) {
-            return getAllCars();
+            return getFilteredCars();
         } else {
             String sql = "select * from cars where " + filterType + " = ?;";
             return jdbcTemplate.query(sql, new Object[]{filter}, new CarMapper());
         }
     }
 
+    public List<String> getAllCarMarks(){
+        String sql = "SELECT DISTINCT mark FROM cars;";
+        return jdbcTemplate.queryForList(sql,String.class);
+    }
+
     @EventListener(ApplicationReadyEvent.class)
     public void initDB() {
 
+        String sql1 = "CREATE TABLE IF NOT EXISTS Cars (id int NOT NULL AUTO_INCREMENT, mark varchar(255), model varchar(255), color varchar(255), PRIMARY KEY (id));";
+        jdbcTemplate.update(sql1);
 
-        //  String sql1 = "CREATE TABLE Cars (id int NOT NULL AUTO_INCREMENT, mark varchar(255), model varchar(255), color varchar(255), PRIMARY KEY (id));";
-        // jdbcTemplate.update(sql1);
-        String sql = "DELETE FROM CARS";
-        jdbcTemplate.update(sql);
+//        String sql2 = "DELETE FROM CARS";
+//        jdbcTemplate.update(sql2);
 
         saveCar(new Car("BMW", "M3", "black"));
         saveCar(new Car("AUDI", "Q5", "red"));

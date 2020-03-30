@@ -1,6 +1,5 @@
 package pl.makuch.jdbcvaadin;
 
-import javax.annotation.Generated;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
