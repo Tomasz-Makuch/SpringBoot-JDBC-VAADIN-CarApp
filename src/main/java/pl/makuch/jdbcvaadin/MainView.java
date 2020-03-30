@@ -1,5 +1,6 @@
 package pl.makuch.jdbcvaadin;
 
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
@@ -19,6 +20,8 @@ public class MainView extends VerticalLayout {
     private Grid<Car> carGrid = new Grid<>(Car.class);
     private TextField carTextFilter = new TextField();
     private ComboBox<String> filterCombo = new ComboBox<>();
+    private Button addButton;
+
     private String[] carEntities = new String[]{"id", "mark", "model", "color"};
     private HorizontalLayout searchLayout = new HorizontalLayout();
 
@@ -26,26 +29,55 @@ public class MainView extends VerticalLayout {
     public MainView(CarDAO carDAO) {
         this.carDAO = carDAO;
         carForm = new CarForm();
+        carForm.addListener(CarForm.SaveEvent.class, this::saveCar);
+        carForm.addListener(CarForm.DeleteEvent.class, this::deleteCar);
+        carForm.addListener(CarForm.CloseEvent.class, e-> closeEditor());
         searchLayout.setHeight("30vh");
         setClassName("cars-view");
         setSizeFull();
         configureGrid();
         updateCarsList();
-        cofigureFilter();
+        getToolbar();
         cofigureFilterCombo();
+        closeEditor();
 
         Div content = new Div(carGrid, carForm);
         content.setSizeFull();
         content.addClassName("content");
 
-        searchLayout.add(filterCombo, carTextFilter);
+        addButton = new Button("Add car", click -> addCar());
+
+
+        searchLayout.add(filterCombo, carTextFilter, addButton);
         searchLayout.setHeight("10vh");
+        searchLayout.setSpacing(true);
         add(searchLayout, content);
+
 
     }
 
-    private void cofigureFilterCombo() {
+    private void addCar() {
+        carGrid.asSingleSelect().clear();
+        editCar(new Car());
+    }
 
+    private void deleteCar(CarForm.DeleteEvent evt) {
+        carDAO.deleteCar(evt.getCar());
+        updateCarsList();
+    }
+
+    private void saveCar(CarForm.SaveEvent evt) {
+        carDAO.updateCar(evt.getCar());
+        updateCarsList();
+    }
+
+    private void closeEditor() {
+        carForm.setCar(null);
+        carForm.setVisible(false);
+        removeClassName("editing");
+    }
+
+    private void cofigureFilterCombo() {
 
         filterCombo.setPlaceholder("Select filter type");
         filterCombo.setItems(carEntities);
@@ -53,7 +85,7 @@ public class MainView extends VerticalLayout {
         filterCombo.addValueChangeListener(e -> updateCarsList());
     }
 
-    private void cofigureFilter() {
+    private void getToolbar() {
         carTextFilter.setPlaceholder("Insert words...");
         carTextFilter.setClearButtonVisible(true);
         carTextFilter.setValueChangeMode(ValueChangeMode.LAZY);
@@ -71,6 +103,18 @@ public class MainView extends VerticalLayout {
         carGrid.setHeight("60vh");
         carGrid.setColumns(carEntities);
         carGrid.getColumns().forEach(carColumn -> carColumn.setAutoWidth(true));
+        carGrid.asSingleSelect().addValueChangeListener(event -> editCar(event.getValue()));
+    }
+
+    private void editCar(Car car) {
+        if(car==null){
+            closeEditor();
+        }
+        else{
+            carForm.setCar(car);
+            carForm.setVisible(true);
+            addClassName("editing");
+        }
     }
 
 }

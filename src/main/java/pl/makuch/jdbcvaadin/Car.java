@@ -1,17 +1,29 @@
 package pl.makuch.jdbcvaadin;
 
+import javax.annotation.Generated;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 public class Car {
 
     private int id;
+
+    @NotNull
+    @NotEmpty
     private String mark;
+
+    @NotNull
+    @NotEmpty
     private String model;
+
+    @NotNull
+    @NotEmpty
     private String color;
 
     public Car() {
     }
 
-    public Car(int id, String mark, String model, String color) {
-        this.id = id;
+    public Car(String mark, String model, String color) {
         this.mark = mark;
         this.model = model;
         this.color = color;

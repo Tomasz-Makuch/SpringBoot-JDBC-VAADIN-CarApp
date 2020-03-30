@@ -20,48 +20,79 @@ public class CarDAO {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public void saveCar(Car car){
-        String sql = "INSERT INTO Cars VALUES(?,?,?,?);";
+    public void saveCar(Car car) {
+        //String sql = "INSERT INTO Cars VALUES(?,?,?,?);";
+        String sql = "INSERT INTO cars (mark, model, color) VALUES (?,?,?);";
         jdbcTemplate.update(sql, new Object[]{
-                car.getId(),
                 car.getMark(),
                 car.getModel(),
                 car.getColor()
         });
     }
 
-    public List<Map<String, Object>> selectByMark(String mark){
+
+    public void updateCar(Car car) {
+
+        System.out.println("wypisuje: "+car.getId());
+        if(car.getId()==0){
+            saveCar(car);
+        }
+        else{
+            String sql1 = "UPDATE cars SET mark = ?, model=?, color=? WHERE id = ?";
+
+            jdbcTemplate.update(sql1, new Object[]{
+                    car.getMark(),
+                    car.getModel(),
+                    car.getColor(),
+                    car.getId()
+            });
+        }
+
+    }
+
+
+    public void deleteCar(Car car) {
+        String sql = "Delete  from cars  where id=?;";
+        jdbcTemplate.update(sql, new Object[]{
+                car.getId()
+        });
+
+    }
+
+    public List<Map<String, Object>> selectByMark(String mark) {
         String sql = "select * from cars where mark like ?;";
         return jdbcTemplate.queryForList(sql, new Object[]{mark});
     }
 
-    public List<Car> getAllCars(){
+    public List<Car> getAllCars() {
         String sql = "select * from cars;";
-        return jdbcTemplate.query(sql,new CarMapper());
+        return jdbcTemplate.query(sql, new CarMapper());
     }
 
     public List<Car> getAllCars(String filterType, String filter) {
-        if(filter==null|| filter.isEmpty()){
+        if (filter == null || filter.isEmpty()) {
             return getAllCars();
-        }
-        else {
-            String sql = "select * from cars where "+filterType+" = ?;";
-            return jdbcTemplate.query(sql,new Object[]{filter}, new CarMapper());
+        } else {
+            String sql = "select * from cars where " + filterType + " = ?;";
+            return jdbcTemplate.query(sql, new Object[]{filter}, new CarMapper());
         }
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    public void initDB(){
+    public void initDB() {
 
+
+        //  String sql1 = "CREATE TABLE Cars (id int NOT NULL AUTO_INCREMENT, mark varchar(255), model varchar(255), color varchar(255), PRIMARY KEY (id));";
+        // jdbcTemplate.update(sql1);
         String sql = "DELETE FROM CARS";
         jdbcTemplate.update(sql);
 
-        saveCar(new Car(1,"BMW", "M3", "black"));
-        saveCar(new Car(2,"AUDI", "Q5", "red"));
-        saveCar(new Car(3,"BMW", "X5", "black"));
-        saveCar(new Car(4,"AUDI", "TT", "blue"));
+        saveCar(new Car("BMW", "M3", "black"));
+        saveCar(new Car("AUDI", "Q5", "red"));
+        saveCar(new Car("BMW", "X5", "black"));
+        saveCar(new Car("AUDI", "TT", "blue"));
 
     }
-
-
 }
+
+
